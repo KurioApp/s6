@@ -26,6 +26,10 @@ var (
 func main() {
 	cobra.OnInitialize(initConfig)
 	cmd.PersistentFlags().StringVar(&cfg, "config", "./config.json", "JSON file consists all configurations")
+
+	if err := cmd.Execute(); err != nil {
+		log.Fatalf("Error running agent: %v", err)
+	}
 }
 
 func initConfig() {
