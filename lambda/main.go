@@ -44,7 +44,7 @@ func handle(ctx context.Context, s3Event events.S3Event) {
 			log.Fatalf("Error: %v", err)
 		}
 
-		resp, err := httpClient.Post(agentURL, "text/plain", bytes.NewBuffer(body))
+		resp, err := httpClient.Post(agentURL, "application/json", bytes.NewBuffer(body))
 		if err != nil || resp == nil {
 			log.Fatalf("Failed sending to agent: %v", err)
 		}
