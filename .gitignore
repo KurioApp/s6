@@ -1,0 +1,5 @@
+config.json
+vendor/
+s6.*
+
+.idea/
