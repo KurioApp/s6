@@ -1,14 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/KurioApp/s6"
-
 	"github.com/labstack/echo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -78,7 +80,10 @@ func download(fileObj s6.S3File) {
 		log.Fatalf("Failed creating dir: %v", err)
 	}
 
-	f, err := os.Create(filepath.Join(baseDir, fileObj.Key))
+	tempName := fmt.Sprintf("temp-file-%s", strconv.Itoa(rand.Intn(9999999)))
+	tempFile := filepath.Join(baseDir, tempName)
+
+	f, err := os.Create(tempFile)
 	if err != nil {
 		log.Fatalf("Failed creating file: %v", err)
 	}
@@ -99,5 +104,10 @@ func download(fileObj s6.S3File) {
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
 		log.Fatalf("Failed storing file: %v", err)
+	}
+
+	err = os.Rename(tempFile, filepath.Join(baseDir, fileObj.Key))
+	if err != nil {
+		log.Fatalf("Failed renaming file: %v", err)
 	}
 }
