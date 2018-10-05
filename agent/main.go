@@ -77,7 +77,8 @@ func download(fileObj s6.S3File) {
 	fileDir := filepath.Dir(fileObj.Key)
 
 	if err := os.MkdirAll(filepath.Join(baseDir, fileDir), os.ModePerm); err != nil {
-		log.Fatalf("Failed creating dir: %v", err)
+		log.Printf("Err: Failed creating dir: %v", err)
+		return
 	}
 
 	tempName := fmt.Sprintf("temp-file-%s", strconv.Itoa(rand.Intn(9999999)))
@@ -85,12 +86,14 @@ func download(fileObj s6.S3File) {
 
 	f, err := os.Create(tempFile)
 	if err != nil {
-		log.Fatalf("Failed creating file: %v", err)
+		log.Printf("Err: Failed creating file: %v", err)
+		return
 	}
 
 	resp, err := http.Get(fileObj.URL())
 	if err != nil || resp == nil {
-		log.Fatalf("Error downloading file: %v", err)
+		log.Printf("Err: Error downloading file: %v", err)
+		return
 	}
 
 	if resp.Body != nil {
@@ -98,16 +101,19 @@ func download(fileObj s6.S3File) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Got non-OK when downloading file: %v", resp.StatusCode)
+		log.Printf("Err: Got non-OK when downloading file: %v", resp.StatusCode)
+		return
 	}
 
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
-		log.Fatalf("Failed storing file: %v", err)
+		log.Printf("Err: Failed storing file: %v", err)
+		return
 	}
 
 	err = os.Rename(tempFile, filepath.Join(baseDir, fileObj.Key))
 	if err != nil {
-		log.Fatalf("Failed renaming file: %v", err)
+		log.Printf("Err: Failed renaming file: %v", err)
+		return
 	}
 }
