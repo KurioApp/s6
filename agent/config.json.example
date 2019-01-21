@@ -1,4 +1,13 @@
 {
   "http_address": ":7723",
-  "base_dir": "/tmp"
+  "base_dir": "/tmp",
+  "bucket": {
+    "video": [],
+    "image": []
+  },
+  "thumbor": {
+    "url": "",
+    "key": "",
+    "paths": []
+  }
 }
