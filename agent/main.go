@@ -214,9 +214,11 @@ func hitThumborCache(fileObj s6.S3File, thumborOpt string) error {
 			return errors.New("got nil response")
 		}
 
+		log = log.WithField("headers", resp.Header)
+
 		cacheHeader := strings.ToLower(resp.Header.Get("X-Cache"))
 		if !strings.HasPrefix(cacheHeader, "hit") {
-			log.WithField("headers", resp.Header).Info("Cache not hit")
+			log.Info("Cache not hit")
 			continue
 		} else {
 			log.Info("Cache hit")
