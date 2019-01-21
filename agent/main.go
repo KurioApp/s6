@@ -74,12 +74,13 @@ func runServer(cmd *cobra.Command, args []string) {
 
 func download(fileObj s6.S3File) {
 	log := logrus.WithField("file", fileObj)
+	log.Info("Start downloading file")
 
 	baseDir := viper.GetString("base_dir")
 	fileDir := filepath.Dir(fileObj.Key)
 
 	if err := os.MkdirAll(filepath.Join(baseDir, fileDir), os.ModePerm); err != nil {
-		log.Errorf("ailed creating dir: %v", err)
+		log.Errorf("failed creating dir: %v", err)
 		return
 	}
 
