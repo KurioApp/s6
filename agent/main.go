@@ -70,12 +70,11 @@ func runServer(cmd *cobra.Command, args []string) {
 
 		go func() {
 			maxTries := 5
-
 			log := logrus.WithField("file", fileObj)
-			log.Info("Start downloading file")
 
 			for i := 0; i < maxTries; i++ {
 				log = log.WithField("tries", i+1)
+				log.Info("Start downloading file")
 
 				err := download(fileObj)
 				if err == errForbidden {
@@ -91,7 +90,7 @@ func runServer(cmd *cobra.Command, args []string) {
 					log.Info("Done")
 				}
 
-				break
+				return
 			}
 
 			log.Error("Max tries exceeded")
