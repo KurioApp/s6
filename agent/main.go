@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/KurioApp/s6"
 	"github.com/labstack/echo"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -30,7 +30,7 @@ func main() {
 	cmd.PersistentFlags().StringVar(&cfg, "config", "./config.json", "JSON file consists all configurations")
 
 	if err := cmd.Execute(); err != nil {
-		log.Fatalf("Error running agent: %v", err)
+		logrus.Fatalf("Error running agent: %v", err)
 	}
 }
 
@@ -46,7 +46,7 @@ func initConfig() {
 	}
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Failed loading configs: %s", cfg)
+		logrus.Fatalf("Failed loading configs: %s", cfg)
 	}
 }
 
@@ -73,11 +73,13 @@ func runServer(cmd *cobra.Command, args []string) {
 }
 
 func download(fileObj s6.S3File) {
+	log := logrus.WithField("file", fileObj)
+
 	baseDir := viper.GetString("base_dir")
 	fileDir := filepath.Dir(fileObj.Key)
 
 	if err := os.MkdirAll(filepath.Join(baseDir, fileDir), os.ModePerm); err != nil {
-		log.Printf("Err: Failed creating dir: %v", err)
+		log.Errorf("ailed creating dir: %v", err)
 		return
 	}
 
@@ -86,13 +88,13 @@ func download(fileObj s6.S3File) {
 
 	f, err := os.Create(tempFile)
 	if err != nil {
-		log.Printf("Err: Failed creating file: %v", err)
+		log.Errorf("Failed creating file: %v", err)
 		return
 	}
 
 	resp, err := http.Get(fileObj.URL())
 	if err != nil || resp == nil {
-		log.Printf("Err: Error downloading file: %v", err)
+		log.Errorf("Error downloading file: %v", err)
 		return
 	}
 
@@ -101,19 +103,19 @@ func download(fileObj s6.S3File) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("Err: Got non-OK when downloading file: %v", resp.StatusCode)
+		log.Errorf("Got non-OK when downloading file: %v", resp.StatusCode)
 		return
 	}
 
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
-		log.Printf("Err: Failed storing file: %v", err)
+		log.Errorf("Failed storing file: %v", err)
 		return
 	}
 
 	err = os.Rename(tempFile, filepath.Join(baseDir, fileObj.Key))
 	if err != nil {
-		log.Printf("Err: Failed renaming file: %v", err)
+		log.Errorf("Failed renaming file: %v", err)
 		return
 	}
 }
