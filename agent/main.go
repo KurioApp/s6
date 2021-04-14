@@ -31,6 +31,7 @@ var (
 
 	errForbidden = errors.New("got 503 status")
 	maxHTTPTries = 5
+	delay        = 200
 )
 
 func main() {
@@ -202,6 +203,8 @@ func hitThumborCache(fileObj s6.S3File, thumborOpt string) error {
 	imgURL := fmt.Sprintf("%s/%s/%s", thumborURL, key, thumborPath)
 
 	for i := 0; i < maxHTTPTries; i++ {
+		time.Sleep(time.Duration(i * delay) * time.Millisecond)
+
 		log = log.WithField("tries", i+1)
 
 		resp, err := http.Get(imgURL)
