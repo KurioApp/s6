@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/KurioApp/s6"
@@ -32,6 +31,7 @@ var (
 
 	errForbidden = errors.New("got 503 status")
 	maxHTTPTries = 5
+	delay        = 200
 )
 
 func main() {
@@ -203,27 +203,31 @@ func hitThumborCache(fileObj s6.S3File, thumborOpt string) error {
 	imgURL := fmt.Sprintf("%s/%s/%s", thumborURL, key, thumborPath)
 
 	for i := 0; i < maxHTTPTries; i++ {
+		time.Sleep(time.Duration(i * delay) * time.Millisecond)
+
 		log = log.WithField("tries", i+1)
 
 		resp, err := http.Get(imgURL)
+
+		// Immediately retry if there is an error.
 		if err != nil {
-			return err
-		}
-
-		if resp == nil {
-			return errors.New("got nil response")
-		}
-
-		log = log.WithField("headers", resp.Header)
-
-		cacheHeader := strings.ToLower(resp.Header.Get("X-Cache"))
-		if !strings.HasPrefix(cacheHeader, "hit") {
-			log.Info("Cache not hit")
+			log.Error(err)
 			continue
-		} else {
-			log.Info("Cache hit")
-			return nil
 		}
+
+		// Immediately retry if there are no response
+		if resp != nil {
+			log.Error("got nil response")
+			continue
+		}
+
+		// Immediately retry if server fail
+		if resp.StatusCode > 499 {
+			log.Errorf("got response code %d", resp.StatusCode)
+			continue
+		}
+
+		return nil
 	}
 
 	return errors.New("max tries exceeded")
